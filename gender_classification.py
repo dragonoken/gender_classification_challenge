@@ -1,20 +1,14 @@
-import os
-import urllib.request
-import pandas
-from sklearn import tree
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.model_selection import GridSearchCV
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
 
-dataset_path = ".\\dataset\\500-person-gender-height-weight-bodymassindex.zip"
-if not os.path.exists(dataset_path):
-    os.makedirs(os.path.dirname(dataset_path), exist_ok=True)
-    dataset_url = r"https://storage.googleapis.com/kaggle-datasets/34879/46976/500-person-gender-height-weight-bodymassindex.zip?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1533243842&Signature=aIc6eUHFYv7BKXC3CKaIAiS%2FBqJO4F%2FeNZXCs3ub1BKiNkjhgvSgNNpG1r%2F9VyLzs31pC1goHQh7ywPQzoqPrmKCqVeSEnx9bYKHLKum1JTv3uzZP6jD4fX8QJaqAhx4kYU3RrmAyLk%2FqrKR84dbTQc%2BChIa9YufX3RwodHqkY5sAAskKun80dZah58XUi9zDyYq%2FIa%2FB1E%2Bp%2By1TMAibmtf3NIcjt2dTlA%2Bm2W%2FKwvggyPml%2BiusRBSXjKk5zYtE2%2BeLHf8ZQlsid07Td%2FJIWOPnoVBvGuEyXBL9f7aH23Rgp2qmic78luetrTYGyxd9d4XrTWSy5sZgzcTZgBzjQ%3D%3D"
-    urllib.request.urlretrieve(dataset_url, filename=dataset_path)
-
-clf = tree.DecisionTreeClassifier()
-
-# CHALLENGE - create 3 more classifiers...
-# 1
-# 2
-# 3
+# Classifiers
+clf_logreg = GridSearchCV(LogisticRegression(), param_grid={'C':[1, 10, 100, 1000, 10000]})
+clf_svc = GridSearchCV(SVC(), param_grid={'C':[1, 10, 100, 1000, 10000],
+                                          'gamma':[.1, .01, .001, .0001]})
+clf_nb = GaussianNB()
 
 # [height, weight, shoe_size]
 X = [[181, 80, 44], [177, 70, 43], [160, 60, 38], [154, 54, 37], [166, 65, 40],
@@ -24,12 +18,31 @@ X = [[181, 80, 44], [177, 70, 43], [160, 60, 38], [154, 54, 37], [166, 65, 40],
 Y = ['male', 'male', 'female', 'female', 'male', 'male', 'female', 'female',
      'female', 'male', 'male']
 
+# Train them on the given data
+clf_logreg.fit(X, Y)
+clf_svc.fit(X, Y)
+clf_nb.fit(X, Y)
 
-# CHALLENGE - ...and train them on our data
-clf = clf.fit(X, Y)
+prediction_logreg = clf_logreg.predict(X)
+prediction_svc = clf_svc.predict(X)
+prediction_nb = clf_nb.predict(X)
 
-prediction = clf.predict([[190, 70, 43]])
+# Compare their reusults and print the best one
 
-# CHALLENGE compare their reusults and print the best one!
+accuracies = {'Logistic Regression' : accuracy_score(Y, prediction_logreg),
+              'Support Vector Machine' : accuracy_score(Y, prediction_svc),
+              'Naive Bayes' : accuracy_score(Y, prediction_nb)}
 
-print(prediction)
+print()
+print('--- Accuracies ---')
+print('Logistic Regression :', accuracies['Logistic Regression'])
+print('Support Vector Machine :', accuracies['Support Vector Machine'])
+print('Naive Bayes :', accuracies['Naive Bayes'])
+print()
+print('Best Classifier :', max(accuracies.keys(), key=lambda key: accuracies[key]))
+print()
+new_data = [[190, 70, 43]]
+print("Predictions on", new_data[0])
+print('Logistic Regression :', clf_logreg.predict(new_data)[0])
+print('Support Vector Machine :', clf_svc.predict(new_data)[0])
+print('Naive Bayes :', clf_nb.predict(new_data)[0])
